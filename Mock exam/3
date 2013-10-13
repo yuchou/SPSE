@@ -1,0 +1,48 @@
+#!/usr/bin/python
+
+print "Author : \t\t %s" %"Xavier Garceau-Aranda"
+print "Date : \t\t %s" %"2013-08-17"
+print "Title : SPSE mock exam"
+print
+
+"""
+Question : 
+
+Write a IMAP Client script which can download all the email from a IMAP server and store them
+in a Sqite DB locally
+"""
+
+"""
+IMAP
+http://www.doughellmann.com/PyMOTW/imaplib/
+"""
+
+#-----------------------#
+# Imports				#
+#-----------------------#
+
+import imaplib
+import email
+
+#-----------------------#
+# Global variables		#
+#-----------------------#
+
+#-----------------------#
+# Objects				#
+#-----------------------#
+
+#-----------------------#
+# Main					#
+#-----------------------#
+
+def main():
+	pass
+
+#-----------------------#
+# Run Main				#
+#-----------------------#
+
+if __name__ == '__main__':
+	main()
+

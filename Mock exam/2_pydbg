@@ -1,0 +1,115 @@
+#!/usr/bin/python
+# -*- coding: cp1252 -*-
+
+print "Author : \t %s" %"Xavier Garceau-Aranda"
+print "Date : \t\t %s" %"2013-08-17"
+print "Title : \t SPSE mock exam"
+print
+
+"""
+Question : 
+Create a Python script which allows you to inspect the “bind” network call and logs the port and IP address used
+"""
+
+#-----------------------#
+# Imports				#
+#-----------------------#
+
+import sys
+import struct
+import subprocess
+
+import socket
+
+from pydbg import *
+from pydbg.defines import *
+
+#-----------------------#
+# Global variables		#
+#-----------------------#
+
+process = 'bind_tcp.exe'
+default_path = "C:\\Documents and Settings\\Administrator\\Desktop\\"
+path = default_path + process
+
+line = '-------------------------'
+
+# global debugger object
+dbg = pydbg()
+
+#-----------------------#
+# Functions				#
+#-----------------------#
+
+# when bind() is called, the breakpoint handles the flow to this function
+# prints out the arguments invoqued by checking the values on the stack
+def bind_bp(dbg):
+	print '\n'+line
+	print '#\tbind() call\t#'
+
+	esp = dbg.context.Esp
+
+	# SOCKET s
+	arg1 = dbg.read_process_memory(esp+0x4, 4) 
+	arg1 = struct.unpack("L",arg1)[0] 
+	print 'socket \t\t %s' %str(arg1)
+	
+	# const struct sockaddr * name
+	arg2 = dbg.read_process_memory(esp+0x8, 4)
+	arg2 = struct.unpack("L",arg2)[0]
+
+	sin_family = dbg.read_process_memory(int(arg2), 2)
+	sin_family = struct.unpack("h", sin_family) # format to read
+	print 'family \t\t %s' %sin_family
+	
+	sin_port = dbg.read_process_memory(int(arg2)+0x2, 2)
+	sin_port = struct.unpack("H", sin_port)[0]
+	sin_port = socket.ntohs(sin_port)
+	print 'port \t\t %s' %sin_port
+	
+	sin_addr = dbg.read_process_memory(int(arg2)+0x4, 4)
+	sin_addr = struct.unpack("bbbb", sin_addr)
+	sin_addr = str(sin_addr[0])+'.'+str(sin_addr[1])+'.'+str(sin_addr[2])+'.'+str(sin_addr[3]) 
+	print 'ip \t\t %s' %sin_addr
+
+	# int namelen
+	arg3 = dbg.read_process_memory(esp+0xC, 4)
+	namelen = struct.unpack("i", arg3)[0]
+	print 'namelen \t %s' %namelen
+
+	print line
+	# keep running
+	return DBG_CONTINUE
+
+#-----------------------#
+# Main					#
+#-----------------------#
+
+def main():
+
+	print 'Starting \t %s' %process
+	module = subprocess.Popen(path)
+
+	pid = module.pid
+	print 'Process PID \t %s' %str(pid)
+
+	# attach to a running process using its pid
+	dbg.attach(pid)
+	# find function addresses
+	bind_address = dbg.func_resolve('ws2_32', 'bind')
+	# set breakpoint on function call
+	try :
+		dbg.bp_set(bind_address, description='bind() BP', handler=bind_bp)
+	except Exception, txt :
+		print '\n[-] Error : %s' %txt
+		print '[-] Exiting'
+		sys.exit(1)
+	# start debugging
+	dbg.run()
+
+#-----------------------#
+# Run Main				#
+#-----------------------#
+if __name__ == '__main__':
+	main()
+

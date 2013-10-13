@@ -1,0 +1,108 @@
+#!/usr/bin/python
+
+print "Author : \t %s" %"Xavier Garceau-Aranda"
+print "Date : \t\t %s" %"2013-08-17"
+print "Title : \t SPSE mock exam"
+print
+
+"""
+Question : 
+
+Write a web crawler which fetch the robots.txt file of a website
+- run your crawler on the top 1000 sites ranked by Alexa
+- report on the top 40 directory names which are disallowed for robots
+"""
+
+#-----------------------#
+# Imports				#
+#-----------------------#
+
+import os
+import string
+
+import socket
+import urllib
+
+from bs4 import BeautifulSoup
+
+from pprint import pprint
+
+#-----------------------#
+# Global variables		#
+#-----------------------#
+
+# all modules use socket so this sets the timeout for every request
+socket.setdefaulttimeout(5)
+
+base_url ="http://www.alexa.com/topsites/global;"
+top_sites_list = []
+robots_disallowed_list = []
+
+test = 1
+
+#-----------------------#
+# Functions				#
+#-----------------------#
+
+# parse a Alexa page to retrieve all the top sites url
+def get_top_sites() :
+
+	fichier = open('topsites.csv', 'r')
+	for i in range(1,1001) :
+		top_sites_list.append(fichier.readline().strip('\r\n').split(',')[1])
+
+# test if the /robots.txt is disalowed
+def test_robots(opener, url) :
+
+	global test
+
+	try :
+		page = opener.open('http://www.' + url + '/robots.txt')
+		lines = page.readlines() # could timeout
+	except Exception, txt :
+		pass
+	else :
+		if page.code == 403 : # Disallowed
+			print '%s\t%s' %(str(test), url)
+			test += 1
+		if page.code == 200 : # Ok
+			linecount = len(lines)
+			for count in range(0, linecount) :
+				try :
+					if lines[count] == 'User-agent: *\n' and lines[count+1] == 'Disallow: /\n' :
+						print '%s\t%s' %(str(test), url)
+						test += 1
+						return
+				except :
+					pass
+
+#-----------------------#
+# Objects				#
+#-----------------------#
+
+# create urllib object to user useragent so some sites don't block requests
+class URLopener(urllib.FancyURLopener):
+	version = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; it; rv:1.8.1.11) Gecko/20071127 Firefox/2.0.0.11'
+
+#-----------------------#
+# Main					#
+#-----------------------#
+
+def main():
+
+	# make a list of the top 1000 sites
+	get_top_sites()
+	# test top sites for /robots.txt
+	opener = URLopener()
+	print "Sites with /robots.txt disallowed (code 403 or / for *)"
+	for site in top_sites_list :
+		test_robots(opener, site)
+		if test == 41 :
+			sys.exit(0)
+
+#-----------------------#
+# Run Main				#
+#-----------------------#
+
+if __name__ == '__main__':
+	main()

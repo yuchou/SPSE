@@ -1,0 +1,123 @@
+#!/usr/bin/python
+
+print "Author : \t %s" %"Xavier Garceau-Aranda"
+print "Date : \t\t %s" %"2013-08-17"
+print "Title : \t SPSE mock exam"
+print
+
+"""
+Question : 
+
+Write a web crawler which fetch the robots.txt file of a website
+- run your crawler on the top 1000 sites ranked by Alexa
+- report on the top 40 directory names which are disallowed for robots
+"""
+
+#-----------------------#
+# Imports				#
+#-----------------------#
+
+import os
+import string
+
+#import socket
+import urllib
+
+from bs4 import BeautifulSoup
+
+from pprint import pprint
+
+#-----------------------#
+# Global variables		#
+#-----------------------#
+
+# all modules use socket so this sets the timeout for every request
+#socket.setdefaulttimeout(5)
+
+line = '------------------------------------------------'
+
+base_url ="http://www.alexa.com/topsites/global;"
+top_sites_list = []
+robots_disallowed_list = []
+
+#-----------------------#
+# Functions				#
+#-----------------------#
+
+# parse a Alexa page to retrieve all the top sites url
+def get_top_sites(url) :
+	#print '[+] Processing URL : %s' %url
+
+	html = urllib.urlopen(url)
+	bs = BeautifulSoup(html, "lxml")
+
+	# get table containing infos
+	linkTable = bs.find_all('h2')
+
+	# fill list with top sites
+	for link in linkTable :
+		link = str(link)
+		#site =  link.strip('<h2>\n<a href="/siteinfo/').split('"')[0]
+		site = link.split('"')[1].split('/siteinfo/')[1]
+		top_sites_list.append(site)
+
+# test if the /robots.txt is disalowed
+def test_robots(url) :
+#	print '[+] Testing URL %s' %url
+
+	try :
+		page = urllib.urlopen('http://www.' + url)
+	except Exception, txt :
+		#print txt
+		pass
+	else :
+		if page.code == 200 :
+			try :
+				robots = urllib.urlopen('http://www.' + url + '/robots.txt')
+			except Exception, txt :
+				#print txt
+				pass
+			else :
+				if robots.code == 403 :
+					#print '\t\t[-] Error %s' %str(robots.code)
+					#print '[-] Robots for %s disallowed' %url
+					robots_disallowed_list.append(url)
+		#else :
+		#	print '[-] Tried %s got error %s' %(url, str(page.code))
+
+
+
+
+#-----------------------#
+# Objects				#
+#-----------------------#
+
+#-----------------------#
+# Main					#
+#-----------------------#
+
+def main():
+
+	# make a list of the top 1000 sites
+	print "Processing top 1000 sites from alexa.com"
+	for page in range(0,40) :
+		url = base_url + str(page)
+		get_top_sites(url)
+
+	# test top sites for /robots.txt
+	print "Testing websites for /robots.txt"
+	for site in top_sites_list :
+		test_robots(site)
+
+	# show sites with disallowed robots.txt
+	print "Sites with /robots.txt disallowed (code 403)"
+	i = 1
+	for site in robots_disallowed_list :
+		print '%s\t\t%s' %(str(i), site)
+
+#-----------------------#
+# Run Main				#
+#-----------------------#
+
+if __name__ == '__main__':
+	main()

@@ -1,0 +1,48 @@
+http://msdn.microsoft.com/en-us/library/windows/desktop/ms737550%28v=vs.85%29.aspx
+http://www.binarytides.com/winsock-socket-programming-tutorial/
+
+struct
+http://docs.python.org/2/library/struct.html
+
+struct sockaddr_in 
+http://www.beej.us/guide/bgnet/output/html/multipage/sockaddr_inman.html
+
+______________________________________________________________________________________
+
+
+int bind(
+  _In_  SOCKET s,
+  _In_  const struct sockaddr *name,
+  _In_  int namelen
+);
+
+ex.
+
+s = socket(AF_INET , SOCK_STREAM , 0 ))
+bind(s ,(struct sockaddr *)&server , sizeof(server)) == SOCKET_ERROR)
+______________________________________________________________________________________
+
+struct socket
+{
+socket_state state;
+unsigned long flags;
+const struct proto_ops * ops;
+struct fasync_struct * fasync_list;
+struct file * file;
+struct sock * sk;
+wait_queue_head_t wait;
+short type;
+}
+
+struct sockaddr_in 
+{
+short            sin_family;   // e.g. AF_INET, AF_INET6
+unsigned short   sin_port;     // e.g. htons(3490)
+struct in_addr   sin_addr;     // see struct in_addr, below
+char             sin_zero[8];  // zero this if you want to
+}
+
+struct in_addr 
+{
+unsigned long s_addr;          // load with inet_pton()
+}

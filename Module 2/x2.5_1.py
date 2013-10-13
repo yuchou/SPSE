@@ -32,7 +32,6 @@ ftpList = ['ftp.aao.gov.au',
 			"ftp.invircible.co.il",
 			"ftp.avm.de"]
 
-
 # # #
 
 class WorkingThread(threading.Thread):

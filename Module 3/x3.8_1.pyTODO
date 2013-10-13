@@ -1,0 +1,24 @@
+#!/usr/bin/python
+
+print "                 __                      "
+print "                |__|____ ___  __         "
+print "                |  \__  \\\\  \/ /       "
+print "                |  |/ __ \\\\   /        "
+print "            /\__|  (____  /\_/           "
+print "            \______|    \/               "
+print "                                         "
+
+print	'Module 3'
+print	'Network Security'
+print	'Exercice'
+print
+
+"""
+
+Create an ARP request packet for the local subnet
+- send and receive responses
+- print results
+
+Find out how to find the local subnet automatically
+"""
+

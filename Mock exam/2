@@ -1,0 +1,153 @@
+#!/usr/bin/python
+
+print "Author : \t %s" %"Xavier Garceau-Aranda"
+print "Date : \t\t %s" %"2013-08-17"
+print "Title : \t SPSE mock exam"
+print
+
+"""
+Question : 
+
+Create a Python script which allows you to inspect the “bind” network call and logs the port and IP address used
+"""
+
+"""
+http://msdn.microsoft.com/en-us/library/windows/desktop/ms737550%28v=vs.85%29.aspx
+http://www.binarytides.com/winsock-socket-programming-tutorial/
+
+struct
+http://docs.python.org/2/library/struct.html
+
+struct sockaddr_in 
+http://www.beej.us/guide/bgnet/output/html/multipage/sockaddr_inman.html
+
+struct socket
+{
+socket_state state;
+unsigned long flags;
+const struct proto_ops * ops;
+struct fasync_struct * fasync_list;
+struct file * file;
+struct sock * sk;
+wait_queue_head_t wait;
+short type;
+}
+
+struct sockaddr_in 
+{
+short            sin_family;   // e.g. AF_INET, AF_INET6
+unsigned short   sin_port;     // e.g. htons(3490)
+struct in_addr   sin_addr;     // see struct in_addr, below
+char             sin_zero[8];  // zero this if you want to
+}
+
+struct in_addr 
+{
+unsigned long s_addr;          // load with inet_pton()
+}
+"""
+
+#-----------------------#
+# Imports				#
+#-----------------------#
+
+import sys
+import struct
+
+import socket
+
+from pydbg import *
+from pydbg.defines import *
+
+#-----------------------#
+# Global variables		#
+#-----------------------#
+
+process = 'bind_server.exe'
+
+line = '----------------------------------'
+
+# global debugger object
+dbg = pydbg()
+
+#-----------------------#
+# Functions				#
+#-----------------------#
+
+# when bind() is called, the breakpoint handles the flow to this function
+# prints out the arguments invoqued by checking the values on the stack
+def bind_bp(dbg):
+	print line
+	print '#\tbind() call\t#'
+	'''
+	esp = dbg.context.Esp
+
+	# SOCKET s
+	arg1 = dbg.read_process_memory(esp+0x4, 4) 
+	arg1 = struct.unpack("L",arg1)[0] 
+	print 'socket description : %s' %str(arg1)
+
+	# const struct sockaddr *name
+
+	arg2 = dbg.read_process_memory(esp+0x8, 4)
+	arg2 = struct.unpack("L",arg2)
+
+	sin_family = dbg.read_process_memory(int(arg2), 2) # get buffer address (4 bytes)
+	sin_family = struct.unpack("h", sin_family) # format to read
+
+	sin_port = dbg.read_process_memory(int(arg2)+0x2, 2)
+	sin_port = struct.unpack("H", sin_port)
+	sin_port = socket.ntohs(sin_port)
+
+	sin_addr = dbg.read_process_memory(int(arg2)+0x4, 4)
+	sin_addr = struct.unpack("L", sin_addr)
+	sin_addr = socket.inet_ntop(sin_addr)
+
+	#sin_zero = dbg.read_process_memory(esp+0xC, 8)
+	#sin_zero = struct.unpack("8c", sin_zero)
+
+	print 'ip \t\t %s' %sin_addr
+	print 'port \t\t %s' %sin_port
+
+	# int namelen
+	arg3 = dbg.read_process_memory(esp+0x10, 4)
+	arg3 = struct.unpack("i", arg3)
+	'''
+	# keep running
+	return DBG_CONTINUE
+
+#-----------------------#
+# Main					#
+#-----------------------#
+
+def main():
+
+
+	# list all processes and find the one we want
+	found = False
+	while not found :
+		for pid, name in dbg.enumerate_processes() :
+			if process == name :
+				dbg.attach(pid)
+				found = True
+				print "[+] Attached to process %s with PID %s" %(name, str(pid))
+				break
+
+	'''
+	if not found :
+		print "[-] Process not found. Exiting"
+		exit(1)
+	'''
+
+	# find function addresses
+	bind_address = dbg.func_resolve('ws2_32', 'bind')
+	# set breakpoint on function call
+	dbg.bp_set(bind_address, description='bind() BP', handler=bind_bp)
+	# start debugging
+	dbg.run()
+
+#-----------------------#
+# Run Main				#
+#-----------------------#
+if __name__ == '__main__':
+	main()

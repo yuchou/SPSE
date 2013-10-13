@@ -1,0 +1,150 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+"""
+MySQL 
+http://zetcode.com/databases/mysqltutorial/
+MySQL python
+http://zetcode.com/db/mysqlpython/
+MySQL data types
+http://www.mysqltutorial.org/mysql-data-types.aspx
+
+sudo mysql
+mysql> SHOW DATABASES;
+mysql> CREATE DATABASE db_name;
+mysql> CREATE USER 'db_user'@'localhost' IDENTIFIED BY 'db_user_pass';
+mysql> USE db_name;
+mysql> GRANT ALL ON db_name.* TO 'db_user'@'localhost';
+mysql> quit;
+"""
+
+#-----------------------#
+# Imports				#
+#-----------------------#
+
+from optparse import OptionParser
+
+import MySQLdb as handler
+
+#-----------------------#
+# Variables				#
+#-----------------------#
+
+usageString = "Usage: %prog [options]"
+parser = OptionParser(usage=usageString)
+
+parser.add_option("-d", "--database", dest="database", metavar="DATABASE", type="string", 
+	help="MySQL database in which to insert values")
+parser.add_option("-u", "--user", dest="user", metavar="USER", type="string", 
+	help="User for the MySQL database")
+parser.add_option("-p", "--password", dest="password", metavar="PASSWORD", type="string", 
+	help="Password for the user of the MySQL database")
+parser.add_option("-t", "--tablename", dest="tablename", metavar="TABLENAME", type="string", 
+	help="Table name to use in the MySQL database")
+
+(options,args) = parser.parse_args()
+
+# more input then expected
+if len(args) > 0:
+	parser.error("Invalid additional option(s). Check -h or --help")
+
+# variables
+database = options.database
+user = options.user
+password = options.password
+tablename = options.tablename
+
+# check that has all necessary values
+if not database and not user and not password and not tablename:
+	parser.error("Missing options")
+if not database :
+	parser.error("Missing database")
+if not user :
+	parser.error("Missing user")
+if not password :
+	parser.error("Missing password")
+if not tablename :
+	parser.error("Missing tablename")
+
+#-----------------------#
+# Objects				#
+#-----------------------#
+
+# This table contains : ELEMENT of type INT
+class table :
+	# initialise table
+	def __init__(self, database, user, password, tablename):
+		self.database = database
+		self.tablename = tablename
+		self.user = user
+		self.password = password
+		# create table and delete previous existing table with same name
+		connection = self.connect()
+		with connection:
+			cursor = connection.cursor()
+			cursor.execute("DROP TABLE IF EXISTS %s" %self.table)
+		connection.close()
+
+	# interface to connect to the database
+	def connect(self) :
+		try :
+			connection = handler.connect('localhost', self.user, self.password, self.database)
+		except Exception, txt :
+			print txt
+			sys.exit(1)
+		else :
+			return connection
+
+	# add a new element to the table
+	def add_element(self, ELEMENT) :
+		connection = self.connect()
+		with connection:
+			cursor = connection.cursor()
+			# create the table it it doesn't exist
+			cursor.execute("CREATE TABLE IF NOT EXISTS %s(Id INT PRIMARY KEY AUTO_INCREMENT, ELEMENT INT)" %self.table)
+			# add element to the table
+			try :
+				cursor.execute("INSERT INTO %s(ELEMENT) VALUES(\'%s\')" %(self.table, ELEMENT)
+			except Exception, txt :
+				pass
+		connection.close()
+
+	# returns a list containint the table elements
+	def get_table_elements(self) :
+		connection = self.connect()
+		with connection:
+			cursor = connection.cursor(handler.cursors.DictCursor)
+			cursor.execute("SELECT * FROM %s" %self.table)
+			return cursor.fetchall()
+		connection.close()
+
+	# check if the table contains a given element
+	def element_exists(self, ELEMENT) :
+		connection = self.connect()
+		with connection:
+			cursor = connection.cursor(handler.cursors.DictCursor)
+				try :
+					exists = cursor.execute("SELECT variable FROM %s WHERE variable=\'%s\'" %(self.table, ELEMENT))
+				except Exception, txt :
+					pass
+				else :
+					return exists
+		connection.close()
+		return new_url
+
+#-----------------------#
+# Main					#
+#-----------------------#
+
+# set global values (after declared objects)
+table_object = table(database, user, password, tablename)
+
+def main():
+	pass
+
+#-----------------------#
+# Run Main				#
+#-----------------------#
+
+if __name__ == '__main__':
+	main()

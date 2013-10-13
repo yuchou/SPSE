@@ -1,0 +1,81 @@
+#!/usr/bin/python
+# -*- coding: cp1252 -*-
+
+print "Author : \t %s" %"Xavier Garceau-Aranda"
+print "Date : \t\t %s" %"2013-08-17"
+print "Title : \t SPSE mock exam"
+print
+
+"""
+Question : 
+Create a Python script which allows you to inspect the “bind” network call and logs the port and IP address used
+"""
+
+#-----------------------#
+# Imports				#
+#-----------------------#
+
+import struct
+
+import immlib
+from immlib import BpHook
+
+#-----------------------#
+# Functions				#
+#-----------------------#
+
+def to_hex(intAddress):
+	return "%08X" %intAddress
+
+#-----------------------#
+# Objects				#
+#-----------------------#
+
+class strcpy_BpHook(BpHook) :
+
+	def __init__(self) :
+		BpHook.__init__(self)
+
+	# overload the run() command -> what happens when a object is instantiated
+	# gets passed a dict of cpu registers
+	def run(self, registers) :
+		imm = immlib.Debugger()
+		imm.log('[+] bind() BpHook called')
+		
+		eip_on_stack = imm.readLong(registers['ESP'])
+		# SOCKET s
+		socket = imm.readLong(registers['ESP'] + 0x4)
+		imm.log('socket %s' %socket)
+
+		# const struct sockaddr * name
+		name_pointer = imm.readLong(registers['ESP'] + 0x8)
+
+		sin_family = imm.readShort(name_pointer)
+		imm.log('family %s' %sin_family)
+		sin_port = imm.readShort(name_pointer + 2)
+		imm.log('port %s' %sin_port)
+		sin_addr = imm.readLong(name_pointer + 4)
+		imm.log('ip %s' %sin_addr)
+
+		# int namelen
+		namelen = imm.readLong(registers['ESP'] + 0xC)
+		imm.log('namelen %s' %namelen)
+
+#-----------------------#
+# Main					#
+#-----------------------#
+
+DESC = 'bind() BPHook'
+def main(args) :
+	imm = immlib.Debugger()
+
+	functionToHook = 'ws2_32.bind'
+	functionAddress = imm.getAddress(functionToHook)
+
+	newHook = strcpy_BpHook()
+	# add it to the list of hooks maintainted in the debugger
+	newHook.add(functionToHook, functionAddress)
+
+	imm.log('Hook for %s : %s added' %(functionToHook, to_hex(functionAddress)))
+
+	return '[+] Done'
